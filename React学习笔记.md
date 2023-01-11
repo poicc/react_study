@@ -236,3 +236,58 @@ render() {
             </ul>
 ```
 
+## jsx本质
+
+jsx仅仅只是React.createElement(compoent,props,...children)函数的语法糖
+
+- 所有的jsx最终都会被转换成React.createElement的函数调用
+
+比如下面两个效果是一样的 message2就是message1通过babel转换的效果
+
+Jsx -> babel -> React.createElement
+
+```jsx
+    const message1 = <h2>Hello React</h2>;
+    const message2 = React.createElement("h2", null, "Hello React");
+```
+
+### createElement三个参数
+
+![createElement三个参数](https://cdn.staticaly.com/gh/poicc/image@main/3541B61A-F325-4437-AC42-753D3C7353A2.39vf5vlswqc0.webp)
+
+
+
+可以使用https://babeljs.io/repl将jsx转换为React.createElement
+
+### 虚拟dom的创建过程
+
+通过createElement最终创建出来的是一个ReactElement对象
+
+1. React利用ReactElement对象组成了一个JS的对象树
+2. JS的对象树就是虚拟dom(Virtual DOM)
+
+   jsx -> createElement函数 -> ReactElement(对象树) -> ReactDOM.render -> 真实DOM
+
+### 为什么使用虚拟DOM
+
+- 很难跟踪状态发生的改变 不方便针对应用程序进行调试
+- 操作真是DOM性能较低
+
+
+
+**虚拟DOM帮助我们从命令式编程转到了声明式编程的模式**
+
+**React官方的说法：**Virtual DOM 是一种编程理念。 
+
+- 在这个理念中，UI以一种理想化或者说虚拟化的方式保存在内存中，并且它是一个相对简单的JavaScript对象
+
+- 我们可以通过ReactDOM.render让 虚拟DOM 和 真实DOM同步起来，这个过程中叫做**协调**（Reconciliation）；
+
+这种编程的方式赋予了React声明式的API： 
+
+- 你只需要告诉React希望让UI是什么状态；
+- React来确保DOM和这些状态是匹配的；
+- 你不需要直接进行DOM操作，只可以从手动更改DOM、属性操作、事件处理中解放出来；
+
+
+
