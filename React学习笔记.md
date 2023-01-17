@@ -384,7 +384,7 @@ React的组件相对于Vue更加灵活，按照不同的方式可以分为多种
 - 类组件需要继承自React.Component
 - 类组件必须实现render函数
 
-使用class定义一个组件：
+使用class来定义一个组件：
 
 - constructor是可选的 通常在constructor中初始化数据
 - this.state中维护的就是组件内部的数据
@@ -392,5 +392,195 @@ React的组件相对于Vue更加灵活，按照不同的方式可以分为多种
 
 ### 函数式组件
 
+使用function来定义组件
+
 - 没有this对象
 - 没有内部状态（hooks）
+- 没有生命周期 也会被更新并挂载 但是没有生命周期函数
+
+### render函数的返回值
+
+当render被调用时，会检查this.props和this.state的变化并返回以下类型之一：
+
+- react元素 例如<div/> <MyComponent/>等
+- 数组或fragments：使render方法可以返回多个元素
+- Portals:可以渲染子节点到不同的DOM子树中
+- 字符串或数值类型：在DOM中会被渲染为文本节点
+- 布尔类型或null：什么都不渲染
+
+### 组件（类）的生命周期
+
+常用的：
+
+mounting挂载阶段:构造函数->render->react更新dom ->执行compoentDidMount回调函数
+
+updating更新阶段：render->react更新dom ->componetDidUpdate回调函数 新增props、setState()、forceUpdate()都会触发updating
+
+unmounting卸载阶段:compoentWillUnmount回调函数
+
+![组件生命周期](https://p.ipic.vip/ww5988.png)
+
+生命周期图谱：https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/
+
+包括不常用的：
+
+![生命周期](https://p.ipic.vip/d94ky2.png)
+
+#### 生命周期函数所做的事情
+
+##### constructor
+
+若不初始化state或不进行方法绑定，则不需要实现constructor
+
+constructor通常做两件事情：
+
+- 给this.state赋值对象来初始化内部的state
+- 为事件绑定实例(this)
+
+##### compoentDidMount
+
+compoentDidMount（）会在组件挂载后（插入DOM树中）立即调用
+
+- 依赖于DOM的操作可以在这里进行
+- 在此处发送网络请求（官方建议）
+- 在此处添加一些订阅（会在componentWillUnmount取消订阅）
+
+##### componetDidUpdate
+
+componetDidUpdate()会在更新后立即调用 首次渲染不会执行
+
+- 当组件更新后 可以在此处对DOM进行操作
+- 如果对更新前后对props进行了比较 也可以选择在此处进行网络请求（例如 当props未发生变化时则不会执行网络请求）
+
+![三个参数](https://p.ipic.vip/kzjbde.png)
+
+##### compoentWillUnmount
+
+compoentWillUnmount()会在组件卸载及销毁之前直接调用
+
+- 在此方法中执行必要的清理操作 比如清楚timer,取消网络请求或订阅等
+
+### 父子间组件通信
+
+类组件           ：
+
+```javascript
+import React, { Component } from 'react';
+
+class ChildCpn extends Component {
+  componentDidMount() {
+    console.log(this.props, "componentDidMount");
+  }
+
+  render() {
+    // console.log(this.props, "render");
+    const {name, age, height} = this.props;
+    return (
+      <h2>子组件展示数据: {name + " " + age + " " + height}</h2>
+    )
+  }
+}
+
+export default class App extends Component {
+  render() {
+    return (
+      <div>
+        <ChildCpn name="why" age="18" height="1.88"/>
+        <ChildCpn name="kobe" age="40" height="1.98"/>
+      </div>
+    )
+  }
+}
+
+```
+
+函数式组件：
+
+```javascript
+import React, { Component } from 'react';
+
+function ChildCpn(props) {
+  const { name, age, height } = props;
+
+  return (
+    <h2>{name + age + height}</h2>
+  )
+}
+
+export default class App extends Component {
+  render() {
+    return (
+      <div>
+        <ChildCpn name="why" age="18" height="1.88" />
+        <ChildCpn name="kobe" age="40" height="1.98" />
+      </div>
+    )
+  }
+}
+
+```
+
+#### 参数验证和默认值
+
+react15之后 把参数验证库导入了prop-types
+
+```javascript
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+function ChildCpn(props) {
+  const { name, age, height } = props;
+  const { names } = props;
+
+  return (
+    <div>
+      <h2>{name + age + height}</h2>
+      <ul>
+        {
+          names.map((item, index) => {
+            return <li>{item}</li>
+          })
+        }
+      </ul>
+    </div>
+  )
+}
+
+class ChildCpn2 extends Component {
+  // es6中的class fields写法
+  static propTypes = {
+
+  }
+
+  static defaultProps = {
+
+  }
+}
+
+ChildCpn.propTypes = {
+  name: PropTypes.string.isRequired, //isRequired为必传
+  age: PropTypes.number,
+  height: PropTypes.number,
+  names: PropTypes.array
+}
+
+ChildCpn.defaultProps = {
+  name: "why",
+  age: 30,
+  height: 1.98,
+  names: ["aaa", "bbb"]
+}
+
+export default class App extends Component {
+  render() {
+    return (
+      <div>
+        <ChildCpn name="why" age={18} height={1.88} names={["abc", "cba"]}/>
+        <ChildCpn name="kobe" age={40} height={1.98} names={["nba", "mba"]}/>
+        <ChildCpn/>
+      </div>
+    )
+  }
+}
+
+```
+
