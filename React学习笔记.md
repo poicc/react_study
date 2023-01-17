@@ -291,3 +291,79 @@ Jsx -> babel -> React.createElement
 
 
 
+## React脚手架解析
+
+### 三大框架的脚手架
+
+- Vue:vue-cli
+- Angular:angular-cli
+- React:create-react-app
+
+![](https://p.ipic.vip/7nr47y.png)
+
+创建React项目的脚手架
+
+```bash
+$ npm install -g create-react-app
+```
+
+创建项目
+
+```bash
+$ create-react-app 项目名称
+```
+
+创建完成后 进入目录 就可以执行```yarn start```运行项目
+
+### 脚手架项目结构
+
+├── README.md
+
+├── package-lock.json
+
+├── package.json
+
+├── public
+
+│  ├── favicon.ico 图标
+
+│  ├── index.html 项目入口
+
+│  ├── logo192.png 不同尺寸logo 在manifest.json中使用
+
+│  ├── logo512.png 不同尺寸logo 在manifest.json中使用
+
+│  ├── manifest.json 和web app配置相关
+
+│  └── robots.txt 指定搜索引擎可以或者无法爬取哪些文件
+
+└── src
+
+  ├── App.css App组件的样式文件
+
+  ├── App.js App组件的代码文件
+
+  ├── App.test.js 测试用例
+
+  ├── index.css 全局样式
+
+  ├── index.js 整个应用的入口文件
+
+  ├── logo.svg 启动项目时看到的React图标
+
+  ├── reportWebVitals.js 帮助我们写好的注册PWA相关的代码
+
+  └── setupTests.js 测试初始化文件
+
+### 关于PWA
+
+- 全称Progressive Web App 渐进式web应用
+- 一个PWA应用首先是一个网页 可以通过Web技术编写出一个网页应用
+- 随后添加上App Manifest和service worker来实现PWA的安装和离线等功能
+- 这种web存在的形式 称之为web app
+
+#### PWA解决的问题
+
+- 可以添加至主屏幕 点击主屏幕图标可以实现启动动画以及隐藏地址栏
+- 实现离线缓存功能 即使用户手机没有网络 依然可以使用一些离线功能
+- 实现了消息推送等等一系列类似于native app相关的功能
