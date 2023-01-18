@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './04_组件通信案例/App';
+import App from './05_React实现slot/App';
 
-import './04_组件通信案例/style.css'
+import './05_React实现slot/style.css'
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
