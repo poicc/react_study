@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './06_跨组件的通信/04_跨组件通信-多个context';
+import App from './07_setState的使用/02_setState是异步更新';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
