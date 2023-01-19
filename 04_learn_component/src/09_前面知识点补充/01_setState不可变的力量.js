@@ -32,7 +32,7 @@ export default class App extends PureComponent {
               return (
                 <li key={item.name}>
                   姓名: {item.name} 
-                  年龄: {item.age}
+                  年龄: {item.age}y
                   <button onClick={e => this.incrementAge(index)}>age+1</button>
                 </li>
               )
