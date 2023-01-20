@@ -855,7 +855,7 @@ React需要基于这两颗不同的树之间的差别来判断如何有效的更
 
 在遍历列表时，总是会提示一个警告，让我们加入一个key属性：
 
-![](https://p.ipic.vip/9gtllt.jpg)
+![](https://p.ipic.vip/a8ms1w.png)
 
 方式一：在最后位置插入数据
 
@@ -878,7 +878,7 @@ key的注意事项：
 
 #### render函数被重复调用问题
 
-只要是修改了App中的数据，所有的组件都需要重新render，进行diff算 法，性能必然是很低的：
+只要是修改了App中的数据，所有的组件都需要重新render，进行diff算法，性能必然是很低的：
 
 - 事实上，很多的组件没有必须要重新render； 
 - 它们调用render应该有一个前提，就是依赖的数据（state、 props）发生改变时，再调用自己的render方法； 
@@ -927,3 +927,619 @@ React给我们提供了一个生命周期方法 shouldComponentUpdate（很多�
 -  最终的效果是，当counter发生改变时，Header、Banner、ProductList的函数不会重新执行，而Footer的函数会被重新执行；
 
 ![](https://p.ipic.vip/je6e1h.png)
+
+### setState不可变数据
+
+state是不可变的 不能脱离setState直接更改state的数据 会影响性能 继承PureComponet时会出现问题
+
+```javascript
+// 1.在开发中不要这样来做
+    // const newData = {name: "tom", age: 30}
+    // this.state.friends.push(newData);
+    // this.setState({
+    //   friends: this.state.friends
+    // });
+
+    // 2.推荐做法
+    const newFriends = [...this.state.friends];
+    newFriends.push({ name: "tom", age: 30 });
+    this.setState({
+      friends: newFriends
+    })
+```
+
+### 全局事件传递
+
+通过Context主要实现的是数据的共享，但是在开发中如果有跨组件之间的事件传递，在React中，我们可以依赖一个使用较多的库 events 来完成对应的操作； 
+
+我们可以通过npm或者yarn来安装events： 
+
+```bash
+$ yarn add events
+```
+
+events常用的API： 
+
+- 创建EventEmitter对象：eventBus对象；
+
+- ```javascript
+  import { EventEmitter } from 'events';
+  
+  // 事件总线: event bus
+  const eventBus = new EventEmitter();
+  
+  ```
+
+- 发出事件：eventBus.emit("事件名称", 参数列表); 
+
+- 监听事件：eventBus.addListener("事件名称", 监听函数)； 
+
+- 移除事件：eventBus.removeListener("事件名称", 监听函数)；
+
+### refs的使用
+
+在React的开发模式中，通常情况下不需要、也不建议直接操作DOM原生，但是某些特殊的情况，确实需要获取到DOM进行某些操作：
+
+- 管理焦点，文本选择或媒体播放；
+- 触发强制动画；
+- 集成第三方 DOM 库；
+
+创建refs来获取对应的DOM 目前有三种方式：
+
+1. 方式一：传入字符串（不推荐 官方更新后已删除该用法）
+   - 使用时通过 this.refs.传入的字符串格式获取对应的元素；
+
+2. 方式二：传入一个对象
+   - 对象是通过 React.createRef() 方式创建出来的；
+   - 使用时获取到创建的对象其中有一个current属性就是对应的元素；
+
+3. 方式三：传入一个函数
+
+   - 该函数会在DOM被挂载时进行回调，这个函数会传入一个 元素对象，我们可以自己保存；
+
+   - 使用时，直接拿到之前保存的元素对象即可；
+
+若ref绑定的是一个组件 则可以直接通过ref访问组件的方法
+
+```javascript
+export default class App extends PureComponent {
+
+  constructor(props) {
+    super(props);
+
+    this.titleRef = createRef();
+    this.counterRef = createRef();
+    this.titleEl = null;
+  }
+
+  render() {
+    return (
+      <div>
+        {/* <h2 ref=字符串/对象/函数>Hello React</h2> */}
+        <h2 ref="titleRef">Hello React</h2>
+        {/* 目前React推荐的方式 */}
+        <h2 ref={this.titleRef}>Hello React</h2>
+        <h2 ref={arg => this.titleEl = arg}>Hello React</h2>
+        <button onClick={e => this.changeText()}>改变文本</button>
+        <hr/>
+        <Counter ref={this.counterRef}/>
+        <button onClick={e => this.appBtnClick()}>App按钮</button>
+      </div>
+    )
+  }
+
+  changeText() {
+    // 1.使用方式一: 字符串(不推荐, 后续的更新会删除)
+    this.refs.titleRef.innerHTML = "Hello Coderwhy";
+    // 2.使用方式二: 对象方式
+    this.titleRef.current.innerHTML = "Hello JavaScript";
+    // 3.使用方式三: 回调函数方式
+    this.titleEl.innerHTML = "Hello TypeScript";
+  }
+
+  appBtnClick() {
+    this.counterRef.current.increment();
+  }
+}
+```
+
+#### ref的类型
+
+ref 的值根据节点的类型而有所不同：
+
+- 当 ref 属性用于 HTML 元素时，构造函数中使用 React.createRef() 创建的 ref 接收底层 DOM 元素作为其 current 属性；
+- 当 ref 属性用于自定义 class 组件时，ref 对象接收组件的挂载实例作为其 current 属性；
+- **你不能在函数组件上使用 ref 属性**，因为他们没有实例； 
+
+函数式组件是没有实例的，所以无法通过ref获取他们的实例： 
+
+- 但是某些时候，我们可能想要获取函数式组件中的某个DOM元素； 这个时候可以通过 React.forwardRef ，后面学习 hooks 中如何使用ref；
+
+### 受控组件和非受控组件
+
+在React中，HTML表单的处理方式和普通的DOM元素不太一样：表单元素通常会保存在一些内部的state。 
+
+比如下面的HTML表单元素： 
+
+![](https://p.ipic.vip/9ck4ti.jpg)
+
+- 这个处理方式是DOM默认处理HTML表单的行为，在用户点击提交时会提交到某个服务器中，并且刷新页面；
+- 在React中，并没有禁止这个行为，它依然是有效的；
+- 但是通常情况下会使用JavaScript函数来方便的处理表单提交，同时还可以访问用户填写的表单数据；
+- 实现这种效果的标准方式是使用“受控组件”；
+
+#### 受控组件使用
+
+在 HTML 中，表单元素（如<input>、 <textarea> 和 <select>）之类的表单元素通常自己维护 state，并根据用户输入进行更新。 
+
+而在 React 中，可变状态（mutable state）通常保存在组件的 state 属性中，并且只能通过使用 setState()来更新。 
+
+-  我们将两者结合起来，使React的state成为“唯一数据源”； 
+-  渲染表单的 React 组件还控制着用户输入过程中表单发生的操作； 
+-  被 React 以这种方式控制取值的表单输入元素就叫做“受控组件”； 
+
+由于在表单元素上设置了 value 属性，因此显示的值将始终为 this.state.value，这使得 React 的 state 成为唯一数据源。 
+
+由于 handleUsernameChange 在每次按键时都会执行并更新 React 的 state，因此显示的值将随着用户输入而更新
+
+```javascript
+export default class App extends PureComponent {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      username: ""
+    }
+  }
+
+  render() {
+    return (
+      <div>
+        <form onSubmit={e => this.handleSubmit(e)}>
+          <label htmlFor="username">
+            用户: 
+            {/* 受控组件 */}
+            <input type="text" 
+                   id="username" 
+                   onChange={e => this.handleChange(e)}
+                   value={this.state.username}/>
+          </label>
+          <input type="submit" value="提交"/>
+        </form>
+      </div>
+    )
+  }
+
+  handleSubmit(event) {
+    event.preventDefault();
+    console.log(this.state.username);
+  }
+
+  handleChange(event) {
+    this.setState({
+      username: event.target.value
+    })
+  }
+}
+
+```
+
+![](https://p.ipic.vip/zky0qo.png)
+
+**textarea标签**
+
+texteare标签和input比较相似：
+
+**select标签**
+
+select标签的使用也非常简单，只是它不需要通过selected属性来控制哪一个被选中，它可以匹配state的value来选中。
+
+```javascript
+
+          <select name="fruits" 
+                  onChange={e => this.handleChange(e)}
+                  value={this.state.fruits}>
+            <option value="apple">苹果</option>
+            <option value="banana">香蕉</option>
+            <option value="orange">橘子</option>
+          </select>
+
+  handleChange(event) {
+    this.setState({
+      fruits: event.target.value
+    })
+  }
+```
+
+**处理多个输入**
+
+多处理方式可以像单处理方式那样进行操作，但是需要多个监听方法： 
+
+可以使用ES6的一个语法：计算属性名（Computed property )
+
+![](https://p.ipic.vip/uffx95.png)
+
+#### 非受控组件
+
+React推荐大多数情况下使用 受控组件 来处理表单数据：
+
+- 一个受控组件中，表单数据是由 React 组件来管理的；另一种替代方案是使用非受控组件，这时表单数据将交由 DOM 节点来处理；
+
+如果要使用非受控组件中的数据，那么我们需要使用 ref 来从DOM节点中获取表单数据。
+
+使用ref来获取input元素； 
+
+- 在非受控组件中通常使用defaultValue来设置默认值； 
+- 同样，<input type="checkbox"> 和 <input type="radio"> 支持 defaultChecked，<select> 和 <textarea> 支 持 defaultValue。
+
+### 高阶组件
+
+高阶函数的维基百科定义：至少满足以下条件之一：
+
+- 接受一个或多个函数作为输入； 
+- 输出一个函数；
+
+JavaScript中比较常见的filter、map、reduce都是高阶函数。
+
+那么什么是高阶组件呢？
+
+- 高阶组件的英文是 **Higher-Order Components**，简称为 HOC； 
+- 官方的定义：**高阶组件是参数为组件，返回值为新组件的函数**； 
+
+我们可以进行如下的解析： 
+
+- 首先， 高阶组件 本身不是一个组件，而是一个**函数**；
+- 其次，这个函数的参数是一个组件，返回值也是一个组件；
+
+![image-20230119203550656](/Users/chenrongqi/Library/Application Support/typora-user-images/image-20230119203550656.png)
+
+#### 高阶组件应用
+
+##### props的增强
+
+不修改原有代码的情况下，添加新的props
+
+```javascript
+function enhanceRegionProps(WrappedComponent) {
+  return props => {
+    return <WrappedComponent {...props} region="中国"/>
+  }
+}
+```
+
+利用高阶组件来共享Context
+
+```javascript
+function withUser(WrappedComponent) {
+  return props => {
+    return (
+      <UserContext.Consumer>
+        {
+          user => {
+            return <WrappedComponent {...props} {...user}/>
+          } 
+        }
+      </UserContext.Consumer>
+    )
+  }
+}
+```
+
+##### 登录权限判断
+
+在开发中，我们可能遇到这样的场景： 
+
+- 某些页面是必须用户登录成功才能进行进入； 
+- 如果用户没有登录成功，那么直接跳转到登录页面；
+
+这个时候，就可以使用高阶组件来完成鉴权操作：
+
+```
+function withAuth(WrappedComponent) {
+  const NewCpn = (props) => {
+    const { isLogin } = props;
+    if (isLogin) {
+      return <WrappedComponent {...props} />;
+    } else {
+      return <LoginPage />;
+    }
+  };
+
+  NewCpn.displayName = "AuthCpn";
+
+  return NewCpn;
+}
+
+const AuthCartPage = withAuth(CartPage);
+// 传递属性
+<AuthCartPage isLogin={true} />
+```
+
+##### 生命周期劫持
+
+可以利用高阶函数来劫持生命周期，在生命周期中完成自己的逻辑
+
+```javascript
+function withRenderTime(WrappedComponent) {
+  return class extends PureComponent {
+    // 即将渲染获取一个时间 beginTime
+    UNSAFE_componentWillMount() {
+      this.beginTime = Date.now();
+    }
+
+    // 渲染完成再获取一个时间 endTime
+    componentDidMount() {
+      this.endTime = Date.now();
+      const interval = this.endTime - this.beginTime;
+      console.log(`${WrappedComponent.name}渲染时间: ${interval}`)
+    }
+
+    render() {
+      return <WrappedComponent {...this.props}/>
+    }
+  }
+}
+```
+
+##### HOC的缺陷
+
+HOC需要在原组件上进行包裹或者嵌套，如果大量使用HOC，将会产生非常多的嵌套，这让调试变得非常困难； 
+
+HOC可以劫持props，在不遵守约定的情况下也可能造成冲突；
+
+
+
+Hooks的出现，是开创性的，它解决了很多React之前的存在的问题
+
+比如this指向问题、比如hoc的嵌套复杂度问题等等； 
+
+
+
+### ref的转发
+
+ref不能应用于函数式组件，因为函数式组件没有实例，所以不能获取到对应的组件对象
+
+但是，在开发中我们可能想要获取函数式组件中某个元素的DOM，这个时候我们应该如何操作呢？
+
+- 方式一：直接传入ref属性（错误的做法）
+- 方式二：通过forwardRef高阶函数
+
+forwardRef函数第二个回调参数就是props传递的ref
+
+```javascript
+const Profile = forwardRef(function(props, ref) {
+  return <p ref={ref}>Profile</p>
+})
+```
+
+### Portals的使用
+
+某些情况下，我们希望渲染的内容独立于父组件，甚至是独立于当前挂载到的DOM元素中（默认都是挂载到id为root的DOM元 素上的）。 
+
+Portal 提供了一种将子节点渲染到存在于父组件以外的 DOM 节点的优秀的方案： 
+
+- 第一个参数（child）是任何可渲染的 React 子元素，例如一个元素，字符串或 fragment； 
+- 第二个参数（container）是一个 DOM 元素； 
+
+```
+class Modal extends PureComponent {
+  render() {
+    return ReactDOM.createPortal(
+      this.props.children,
+      document.getElementById("modal")
+    )
+  }
+}
+```
+
+通常来讲，当你从组件的 render 方法返回一个元素时，该元素将被挂载到 DOM 节点中离其最近的父节点：
+
+然而，有时候将子元素插入到 DOM 节点中的不同位置也是有好处的
+
+### fragment
+
+在之前的开发中，我们总是在一个组件中返回内容时包裹一个div元素： 
+
+我们又希望可以不渲染这样一个div应该如何操作呢？使用Fragment
+
+Fragment 允许你将子列表分组，而无需向 DOM 添加额外节点；
+
+React还提供了Fragment的短语法： 
+
+- 它看起来像空标签 <> </>； 
+- 但是，如果我们需要在Fragment中添加key，那么就不能使用短语法
+
+### StrictMode
+
+StrictMode 是一个用来突出显示应用程序中潜在问题的工具。 
+
+- 与 Fragment 一样，StrictMode 不会渲染任何可见的 UI； 
+- 它为其后代元素触发额外的检查和警告； 
+- 严格模式检查仅在开发模式下运行；*它们不会影响生产构建*； 
+
+可以为应用程序的任何部分启用严格模式： 
+
+- 不会对 Header 组件运行严格模式检查； 
+- 但是，Home 以及它们的所有后代元素都将进行检查；
+
+```javascript
+<Header/>
+<StrictMode>
+          <Home/>
+        </StrictMode>
+```
+
+#### 严格模式检查的是什么
+
+1. 识别不安全的生命周期： 
+
+2. 使用过时的ref API 
+
+3. 使用废弃的findDOMNode方法 
+   - 在之前的React API中，可以通过findDOMNode来获取DOM，不过已经不推荐使用了
+
+4. 检查意外的副作用 
+
+   - 这个组件的constructor会被调用两次；
+
+   - 这是严格模式下故意进行的操作，让你来查看在这里写的一些逻辑代码被调用多次时，是否会产生一些副作用；
+
+   - 在生产环境中，是不会被调用两次的；
+
+5. 检测过时的context API 
+
+   - 早期的Context是通过static属性声明Context对象属性，通过getChildContext返回Context对象等方式来使用Context的；
+
+   - 目前这种方式已经不推荐使用
+
+## React中的样式
+
+### 内联样式
+
+内联样式是官方推荐的一种css样式的写法： 
+
+- style 接受一个采用小驼峰命名属性的 JavaScript 对象，而不是 CSS 字符串； 
+- 并且可以引用state中的状态来设置相关的样式；
+
+内联样式的优点: 
+
+1. 内联样式, 样式之间不会有冲突
+
+2. 可以动态获取当前state中的状态
+
+内联样式的缺点：
+
+1. 写法上都需要使用驼峰标识 
+
+2. 某些样式没有提示
+
+3. 大量的样式, 代码混乱
+
+4. 某些样式无法编写(比如伪类/伪元素) 
+
+所以官方依然是希望内联合适和普通的css来结合编写
+
+### 普通的css
+
+普通的css通常会编写到一个单独的文件，之后再进行引入。 
+
+这样的编写方式和普通的网页开发中编写方式是一致的：
+
+- 如果我们按照普通的网页标准去编写，那么也不会有太大的问题； 
+- 但是组件化开发中我们总是希望组件是一个独立的模块，即便是样式也只是在自己内部生效，不会相互影响； 
+- 但是普通的css都属于全局的css，样式之间会相互影响； 
+
+这种编写方式最大的问题是样式之间会相互层叠掉；
+
+### CSS modules
+
+css modules并不是React特有的解决方案，而是所有使用了类似于webpack配置的环境下都可以使用的。
+
+- 但是，如果在其他项目中使用个，那么我们需要自己来进行配置，比如配置webpack.config.js中的modules: true等。
+
+React的脚手架已经内置了css modules的配置：
+
+- .css/.less/.scss 等样式文件都修改成 .module.css/.module.less/.module.scss 等,之后就可以引用并且进行使用了；
+
+css modules确实解决了局部作用域的问题，也是很多人喜欢在React中使用的一种方案。
+
+但是这种方案也有自己的缺陷： 
+
+- 引用的类名，不能使用连接符(.home-title)，在JavaScript中是不识别的；
+- 所有的className都必须使用{style.className} 的形式来编写；
+- 不方便动态来修改某些样式，依然需要使用内联样式的方式； 
+
+如果你觉得上面的缺陷还算OK，那么你在开发中完全可以选择使用css modules来编写，并且也是在React中很受欢迎的一种方式。
+
+### CSS in JS
+
+实际上，官方文档也有提到过CSS in JS这种方案：
+
+- “CSS-in-JS” 是指一种模式，其中 CSS 由 JavaScript 生成而不是在外部文件中定义； 
+- *注意此功能并不是 React 的一部分，而是由第三方库提供。* React 对样式如何定义并没有明确态度；
+
+在传统的前端开发中，我们通常会将结构（HTML）、样式（CSS）、逻辑（JavaScript）进行分离。 
+
+- 但是在前面的学习中提到过，React的思想中认为逻辑本身和UI是无法分离的，所以才会有了JSX的语法。 
+- 样式呢？样式也是属于UI的一部分； 
+- 事实上CSS-in-JS的模式就是一种将样式（CSS）也写入到JavaScript中的方式，并且可以方便的使用JavaScript的状态；
+- 所以React有被人称之为 All in JS； 
+
+当然，这种开发的方式也受到了很多的批评： 
+
+- Stop using CSS in JavaScript for web development
+- https://hackernoon.com/stop-using-css-in-javascript-for-web-development-fa32fb873dcc
+
+#### styled-components插件
+
+批评声音虽然有，但是在我们看来很多优秀的CSS-in-JS的库依然非常强大、方便：
+
+- CSS-in-JS通过JavaScript来为CSS赋予一些能力，包括类似于CSS预处理器一样的样式嵌套、函数定义、逻辑复用、动态修
+- 改状态等等；
+- 依然CSS预处理器也具备某些能力，但是获取动态状态依然是一个不好处理的点；
+- 所以，目前可以说CSS-in-JS是React编写CSS最为受欢迎的一种解决方案；
+
+目前比较流行的CSS-in-JS的库有：
+
+- styled-components
+- emotion
+- glamorous
+
+目前可以说styled-components依然是社区最流行的CSS-in-JS库
+
+安装styled-components：```yarn add styled-components```
+
+##### 标签模板字符串
+
+ES6中增加了模板字符串的语法，模板字符串还有另外一种用法：标签模板字符串（Tagged Template 
+
+Literals）。 
+
+正常情况下，我们都是通过 函数名() 方式来进行调用的，其实函数还有另外一种调用方式： 
+
+如果我们在调用的时候插入其他的变量： 
+
+- 模板字符串被拆分了；
+- 第一个元素是数组，是被模块字符串拆分的字符串组合；
+- 后面的元素是一个个模块字符串传入的内容； 
+
+在styled component中，就是通过这种方式来解析模块字符串，最终生成我们想要的样式的
+
+![Snipaste_2023-01-20_21-02-21](/Users/chenrongqi/Desktop/Snipaste_2023-01-20_21-02-21.png)
+
+##### styled的基本使用
+
+styled-components的本质是通过函数的调用，最终创建出一个组件：
+
+- 这个组件会被自动添加上一个不重复的class； 
+
+styled-components会给该class添加相关的样式；
+
+另外，它支持类似于CSS预处理器一样的样式嵌套： 
+
+- 支持直接子代选择器或后代选择器，并且 直接编写样式；
+- 可以通过&符号获取当前元素； 
+- 直接伪类选择器、伪元素等；
+
+![](https://p.ipic.vip/ce6561.png)
+
+##### props、attrs属性
+
+props可以穿透，props可以被传递给styled组件
+
+- 获取props需要通过${}传入一个插值函数，props会作为该函数的参数； 
+- 这种方式可以有效的解决动态样式的问题； 
+
+也可以添加attrs属性
+
+![](https://p.ipic.vip/1mlt22.png)
+
+##### styled高级特性
+
+支持样式继承
+
+![](https://p.ipic.vip/y6ggxn.png)
+
+styled可以设置主题
+
+![](https://p.ipic.vip/wuvieu.png)
