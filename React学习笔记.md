@@ -1,3 +1,11 @@
+
+
+
+
+
+
+
+
 # React学习笔记
 
 ## jsx语法
@@ -1543,3 +1551,133 @@ props可以穿透，props可以被传递给styled组件
 styled可以设置主题
 
 ![](https://p.ipic.vip/wuvieu.png)
+
+## React中Ant Design的使用
+
+### React中添加class
+
+React在JSX给了开发者足够多的灵活性，可以像编写JavaScript代码一样，通过一些逻辑来决定是否添加某些class： 
+
+![](https://p.ipic.vip/lglire.jpg)
+
+这个时候我们可以借助于一个第三方的库：classnames,用于动态添加classnames的一个库
+
+![](https://p.ipic.vip/kn1efl.jpg)
+
+### AntDesign的安装
+
+**使用 npm 或 yarn 安装**
+
+```bash
+$ npm install antd –save
+```
+
+或
+
+```bash
+$ yarn add antd
+```
+
+需要在index.js中引入全局的Antd样式：
+
+```
+import "antd/dist/antd.css";
+```
+
+在App.js中就可以使用一些组件了：
+
+**考虑一个问题：Antd是否会将一些没有用的代码（组件或者逻辑代码）引入，造成包很大呢？**
+
+antd 官网有提到：antd 的 JS 代码默认支持基于 ES modules 的 tree shaking，对于 js 部分，直接引入 import { Button } from 'antd' 就会有按需加载的效果。
+
+### 使用craco修改默认配置
+
+对主题等相关的高级特性进行配置，需要修改create-react-app 的默认配置。 
+
+可以通过yarn run eject来暴露出来对应的配置信息进行修改； 
+
+ 但是对于webpack并不熟悉的人来说，直接修改 CRA 的配置是否会给你的项目带来负担，甚至会增加项目的隐患和不稳定性
+
+所以，在项目开发中是不建议大家直接去修改 CRA 的配置信息的；
+
+那么如何来进行修改默认配置呢？社区目前有两个比较常见的方案： 
+
+- react-app-rewired + customize-cra；（这个是antd早期推荐的方案）
+- craco；（目前antd推荐的方案）
+
+#### 使用步骤
+
+第一步：安装craco： yarn add @craco/craco
+
+第二步：修改package.json文件
+
+原本启动时，是通过react-scripts来管理的；
+
+现在启动时，需要通过craco来管理；
+
+```json
+  "scripts": {
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "eject": "react-scripts eject"
+  },
+```
+
+第三步：在根目录下创建craco.config.js文件用于修改默认配置
+
+```javascript
+module.exports = {
+// 配置文件
+}
+```
+
+#### 配置主题
+
+- 按照 配置主题 的要求，自定义主题需要用到类似 less-loader 提供的 less 变量覆盖功能：
+  - 可以引入 craco-less 来帮助加载 less 样式和修改变量；
+
+- 安装 craco-less： yarn add craco-less
+
+- 修改craco.config.js中的plugins： 
+  - 使用modifyVars可以在运行时修改LESS变量；
+
+```javascript
+const CracoLessPlugin = require('craco-less');
+module.exports = {
+plugins: [
+{
+plugin: CracoLessPlugin,
+options: {
+lessLoaderOptions: {
+lessOptions: {
+modifyVars: { '@primary-color': '#1DA57A' },
+javascriptEnabled: true,
+},
+},
+},
+},
+],
+}
+```
+
+引入antd的样式时，引入antd.less文件： import 'antd/dist/antd.less'
+
+修改后重启 yarn start，如果看到一个绿色的按钮就说明配置成功了。
+
+#### 配置别名
+
+```javascript
+const path = require("path");
+const resolve = dir => path.resolve(__dirname, dir);
+
+module.exports = {
+  webpack: {
+    alias: {
+      "@": resolve("src"),
+      "components": resolve("src/components")
+    }
+  }
+}
+```
+
