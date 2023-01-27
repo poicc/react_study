@@ -1681,3 +1681,164 @@ module.exports = {
 }
 ```
 
+
+
+## React中的动画-react-transition-group
+
+### react-transition-group介绍
+
+React社区提供了react-transition-group用来完成过渡动画。React曾为开发者提供过动画插件 react-addons-css-transition-group，后由社区维护，形成了现在的 react-transition-group。 
+
+这个库可以帮助我们方便的实现组件的 入场 和 离场 动画，使用时需要进行额外的安装：
+
+npm 
+
+```bash
+$ npm install react-transition-group --save
+```
+
+yarn
+
+```bash
+$ yarn add react-transition-group
+```
+
+react-transition-group本身非常小，不会为我们应用程序增加过多的负担。
+
+### react-transition-group主要组件
+
+react-transition-group主要包含四个组件：
+
+Transition
+
+- 该组件是一个和平台无关的组件（不一定要结合CSS）；
+- 在前端开发中，我们一般是结合CSS来完成样式，所以比较常用的是CSSTransition； 
+
+CSSTransition
+
+- 在前端开发中，通常使用CSSTransition来完成过渡动画效果
+
+SwitchTransition
+
+- 两个组件显示和隐藏切换时，使用该组件
+
+TransitionGroup
+
+- 将多个动画组件包裹在其中，一般用于列表中元素的动画；
+
+#### CSSTransition
+
+CSSTransition是基于Transition组件构建的：
+
+CSSTransition执行过程中，有三个状态：appear、enter、exit； 
+
+它们有三种状态，需要定义对应的CSS样式：
+
+- 第一类，开始状态：对于的类是-appear、-enter、exit； 
+- 第二类：执行动画：对应的类是-appear-active、-enter-active、-exit-active； 
+- 第三类：执行结束：对应的类是-appear-done、-enter-done、-exit-done； 
+
+**CSSTransition常见对应的属性：**
+
+ **in：触发进入或者退出状态**
+
+- 如果添加了unmountOnExit={true}，那么该组件会在执行退出动画结束后被移除掉；
+- 当in为true时，触发进入状态，会添加-enter、-enter-acitve的class开始执行动画，当动画执行结束后，会移除两个class，并且添加-enter-done的class； 
+
+当in为false时，触发退出状态，会添加-exit、-exit-active的class开始执行动画，当动画执行结束后，会移除两个class，并且添加-enter-done的class；
+
+**classNames：动画class的名称**
+
+决定了在编写css时，对应的class名称：比如card-enter、card-enter-active、card-enter-done； 
+
+**timeout：** 过渡动画的时间
+
+**appear：** 是否在初次进入添加动画（需要和in同时为true） 
+
+**unmountOnExit**：退出后卸载组件
+
+官网：https://reactcommunity.org/react-transition-group/transition
+
+CSSTransition对应的钩子函数：主要为了检测动画的执行过程，来完成一些JavaScript的操作
+
+- onEnter：在进入动画之前被触发；
+- onEntering：在应用进入动画时被触发；
+- onEntered：在应用进入动画结束后被触发；
+
+#### SwitchTransition
+
+SwitchTransition可以完成两个组件之间切换的炫酷动画：
+
+- 比如我们有一个按钮需要在on和off之间切换，我们希望看到on先从左侧退出，off再从右侧进入；
+- 这个动画在vue中被称之为 vue transition modes； 
+- react-transition-group中使用SwitchTransition来实现该动画；
+
+SwitchTransition中主要有一个属性：mode，有两个值 
+
+- in-out：表示新组件先进入，旧组件再移除；
+- out-in：表示就组件先移除，新组建再进入；
+
+
+
+SwitchTransition组件里面要有CSSTransition或者Transition组件，不能直接包裹你想要切换的组件；
+
+SwitchTransition里面的CSSTransition或Transition组件不再像以前那样接受in属性来判断元素是何种状态，取而代之的是key属性
+
+#### TransitionGroup
+
+当有一组动画时，需要将这些CSSTransition放入到一个TransitionGroup中来完成动画：
+
+```javascript
+<TransitionGroup>
+          {
+            this.state.names.map((item, index) => {
+              return (
+                <CSSTransition key={item}
+                  timeout={500}
+                  classNames="item">
+                  <div>
+                    {item}
+                    <button onClick={e => this.removeItem(index)}>-</button>
+                  </div>
+                </CSSTransition>
+              )
+            })
+          }
+        </TransitionGroup>
+```
+
+## Redux
+
+### 纯函数
+
+**js中的纯函数**
+
+函数式编程中有一个概念叫纯函数，JavaScript符合函数式编程的范式，所以也有纯函数的概念；
+
+在React中，纯函数的概念非常重要，学习Redux时也非常重要
+
+**纯函数的维基百科定义：**
+
+在程序设计中，若一个函数符合一下条件，那么这个函数被称为纯函数：
+
+- 此函数在相同的输入值时，需产生相同的输出。函数的输出和输入值以外的其他隐藏信息或状态无关，也和由I/O设备产生的外部输出无关。
+- 该函数不能有语义上可观察的函数副作用，诸如“触发事件”，使输出设备输出，或更改输出值以外物件的内容等。
+
+当然上面的定义会过于的晦涩，所以简单总结一下：
+
+- 确定的输入，一定会产生确定的输出；
+- 函数在执行过程中，不能产生副作用；
+
+![](https://p.ipic.vip/xhc77a.png)
+
+**React中的纯函数**
+
+为什么纯函数在函数式编程中非常重要呢？
+
+- 因为你可以安心的写和安心的用；
+- 你在写的时候保证了函数的纯度，只是但是实现自己的业务逻辑即可，不需要关心传入的内容或者依赖其他的外部变量；
+- 你在用的时候，你确定你的输入内容不会被任意篡改，并且自己确定的输入，一定会有确定的输出；
+
+React中就要求我们无论是函数还是class声明一个组件，这个组件都必须像纯函数一样，保护它们的props不被修改：
+
+**所有的React组件都必须像纯函数一样保护它们的props不被更改**
