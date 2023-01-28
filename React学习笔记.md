@@ -1842,3 +1842,130 @@ SwitchTransition里面的CSSTransition或Transition组件不再像以前那样�
 React中就要求我们无论是函数还是class声明一个组件，这个组件都必须像纯函数一样，保护它们的props不被修改：
 
 **所有的React组件都必须像纯函数一样保护它们的props不被更改**
+
+
+
+### Redux介绍
+
+- JS的状态容器，提供了可预测的状态管理 用来控制和追踪state
+- 还可以和其他界面库一起使用（Vue等）
+
+#### Redux核心理念
+
+##### action
+
+所有数据的变化 需要通过派发（dispatch）action来更新
+
+action是一个JS对象 用来描述这次更新的type和content
+
+#### reducer
+
+- 是一个纯函数
+- 作用就是将传入的state和action联系起来 返回一个state
+
+#### 三大原则
+
+- 单一数据源 整个应用的state被存储在一颗object tree中 并且object tree只存储在一个store中
+- state是只读的
+- 只能使用纯函数来执行修改
+
+### Redux使用
+
+安装redux：
+
+```bash
+$ npm install redux --save
+或
+$ yarn add redux
+```
+
+**Redux的使用过程**
+
+1. 创建一个对象，作为我们要保存的状态：
+
+2. 创建Store来存储这个state
+
+- 创建store时必须创建reducer； 
+- 我们可以通过 store.getState 来获取当前的state
+
+3. 通过action来修改state
+
+- 通过dispatch来派发action； 
+- 通常action中都会有type属性，也可以携带其他的数据； 
+
+4. 修改reducer中的处理代码
+
+- reducer是一个纯函数，不需要直接修改state； 
+
+5. 可以在派发action之前，监听store的变化：
+
+```
+// 1.导入redux(不能通过ES6的方式)
+// import/export 13.2.0开始支持
+// commonjs一种实现 -> nodejs
+const redux = require('redux');
+
+const initialState = {
+  counter: 0
+}
+
+// reducer
+function reducer(state = initialState, action) {
+  switch (action.type) {
+    case "INCREMENT":
+      return { ...state, counter: state.counter + 1 }
+    case "DECREMENT":
+      return { ...state, counter: state.counter - 1 }
+    case "ADD_NUMBER":
+      return { ...state, counter: state.counter + action.num }
+    case "SUB_NUMBER":
+      return { ...state, counter: state.counter - action.num }
+    default:
+      return state;
+  }
+}
+
+// store(创建的时候需要传入一个reducer)
+const store = redux.createStore(reducer)
+
+// 订阅store的修改
+store.subscribe(() => {
+  console.log("counter:", store.getState().counter);
+})
+
+// actions
+const action1 = { type: "INCREMENT" };
+const action2 = { type: "DECREMENT" };
+
+const action3 = { type: "ADD_NUMBER", num: 5 };
+const action4 = { type: "SUB_NUMBER", num: 12 };
+
+// 派发action
+store.dispatch(action1);
+store.dispatch(action2);
+store.dispatch(action2);
+store.dispatch(action3);
+store.dispatch(action4);
+
+```
+
+#### redux结构划分
+
+将所有的逻辑代码写到一起，当redux变得复杂时代码就难以维护。会对代码进行拆分，将store、reducer、action、constants拆分成一个个文件。
+
+**注意：node中对ES6模块化的支持**
+
+从node v13.2.0开始，node才对ES6模块化提供了支持： 
+
+node v13.2.0之前，需要进行如下操作：
+
+- 在package.json中添加属性： "type": "module"； 
+- 在执行命令中添加如下选项：node --experimental-modules src/index.js; 
+
+node v13.2.0之后，只需要进行如下操作：在package.json中添加属性： "type": "module"； 
+
+- 注意：导入文件时，需要跟上.js后缀名；
+
+#### redux使用流程图
+
+![](https://p.ipic.vip/4if3qp.png)
