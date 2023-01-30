@@ -2038,3 +2038,5 @@ redux-thunk可以让dispatch(action函数)，action可以是一个函数；
 - 该函数在dispatch之后会被执行；
 
 ![](https://p.ipic.vip/yte9vh.jpg)
+
+### Redux-saga
