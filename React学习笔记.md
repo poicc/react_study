@@ -2039,4 +2039,259 @@ redux-thunk可以让dispatch(action函数)，action可以是一个函数；
 
 ![](https://p.ipic.vip/yte9vh.jpg)
 
+### Redux-devtools
+
+redux官网为我们提供了redux-devtools的工具； 利用这个工具，我们可以知道每次状态是如何被修改的，修改前后的状态变化等等；
+
+安装该工具需要两步： 
+
+- 第一步：在对应的浏览器中安装相关的插件（比如Chrome浏览器扩展商店中搜索Redux DevTools即可，其他方法可以参考GitHub）；
+- 第二步：在redux中继承devtools的中间件
+
+```js
+import { createStore, compose } from 'redux';
+import thunkMiddleware from 'redux-thunk';
+
+import reducer from './reducer.js';
+
+// composeEnhancers函数
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({trace: true}) || compose;
+
+const store = createStore(reducer, composeEnhancers(storeEnhancer));
+
+export default store;
+```
+
+Devtools工具栏如图所示 可以追踪到每一个state的改变
+
+![](https://p.ipic.vip/sqltgf.png)
+
 ### Redux-saga
+
+#### generator使用
+
+在JavaScript中编写一个普通的函数，进行调用会立即拿到这个函数的返回结果。
+
+如果将这个函数编写成一个生成器函数。
+
+调用iterator的next函数，会销毁一次迭代器，并且返回一个yield的结果。
+
+```js
+
+    // generator: 生成器
+    // 1.普通函数
+    // function foo() {
+    //   console.log("foo被执行");
+    // }
+
+    // foo();
+    // 2.生成器函数的定义
+    // 生成器函数
+    function* foo() {
+      console.log("111");
+      yield "Hello";
+      console.log("222");
+      yield "World";
+      console.log("333");
+      yield "coderwhy";
+      console.log("444");
+    }
+
+    // iterator: 迭代器
+    const result = foo();
+    console.log(result);
+
+    // 3.使用迭代器
+    // 调用一次next, 就会消耗一次迭代器
+    // const res1 = result.next();
+    // console.log(res1);
+    // const res2 = result.next();
+    // console.log(res2);
+    // const res3 = result.next();
+    // console.log(res3);
+    // const res4 =result.next();
+    // console.log(res4);
+
+    // 4.生成器函数中代码的执行顺序
+
+    // 5.练习: 定义一个生成器函数, 依次可以生成1~10的数字
+    function* generateNumber() {
+      for (var i = 1; i <= 10; i++) {
+        yield i;
+      }
+    }
+
+    // const numIt = generateNumber();
+    // console.log(numIt.next().value);
+
+    // 6.generator和Promise一起来使用
+    function* bar() {
+      console.log("1111");
+      const result = yield new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve("Hello Generator");
+        }, 3000);
+      });
+      console.log(result);
+    }
+
+    const it = bar();
+    it.next().value.then(res => {
+      it.next(res)
+    })
+
+      (preValue = 0, item) => { };
+    (preState = defaultState, action) => { };
+
+    ["abc", "cba"].reduce((preValue, item) => { }, 0)
+
+```
+
+#### redux-saga使用
+
+redux-saga是另一个比较常用在redux发送异步请求的中间件，它的使用更加的灵活。 
+
+Redux-saga的使用步骤如下
+
+1. 安装redux-saga：```yarn add redux-saga```
+
+2. 集成redux-saga中间件
+
+- 导入创建中间件的函数；
+- 通过创建中间件的函数，创建中间件，并且放到applyMiddleware函数中；
+- 启动中间件的监听过程，并且传入要监听的saga； 
+
+```js
+import { createStore, applyMiddleware, compose } from 'redux';
+import thunkMiddleware from 'redux-thunk';
+import createSagaMiddleware from 'redux-saga';
+
+import saga from './saga';
+import reducer from './reducer.js';
+
+// 应用一些中间件
+// 1.引入thunkMiddleware中间件(上面)
+// 2.创建sagaMiddleware中间件
+const sagaMiddleware = createSagaMiddleware();
+
+const storeEnhancer = applyMiddleware(thunkMiddleware, sagaMiddleware);
+const store = createStore(reducer, storeEnhancer);
+
+sagaMiddleware.run(saga);
+
+export default store;
+```
+
+3. saga.js文件的编写
+
+- takeEvery：可以传入多个监听的actionType，每一个都可以被执行（对应有一个takeLatest，会取消前面的）
+- put：在saga中派发action不再是通过dispatch，而是通过put； 
+- all：可以在yield的时候put多个action；
+
+```js
+import { takeEvery, put, all, takeLatest } from 'redux-saga/effects';
+import axios from 'axios';
+import {
+  FETCH_HOME_MULTIDATA, ADD_NUMBER
+} from './constants';
+import {
+  changeBannersAction,
+  changeRecommendAction
+} from './actionCreators';
+
+function* fetchHomeMultidata(action) {
+  const res = yield axios.get("http://123.207.32.32:8000/home/multidata");
+  const banners = res.data.data.banner.list;
+  const recommends = res.data.data.recommend.list;
+  // yield put(changeBannersAction(banners));
+  // yield put(changeRecommendAction(recommends));
+  yield all([
+    yield put(changeBannersAction(banners)),
+    yield put(changeRecommendAction(recommends))
+  ])
+}
+
+function* mySaga() {
+  // takeLatest takeEvery区别:
+  // takeLatest: 依次只能监听一个对应的action
+  // takeEvery: 每一个都会被执行
+  yield all([
+    takeLatest(FETCH_HOME_MULTIDATA, fetchHomeMultidata),
+    // takeLatest(ADD_NUMBER, fetchHomeMultidata),
+  ]);
+}
+
+export default mySaga;
+```
+
+### 使用Monkey Patching实现中间件
+
+可以利用一个hack一点的技术：Monkey Patching，利用它可以修改原有的程序逻辑；
+
+#### 用Monkey Patching实现日志打印
+
+```js
+function patchLogging(store) {
+  const next = store.dispatch;
+  function dispatchAndLogging(action) {
+    console.log("dispatch前---dispatching action:", action);
+    next(action);
+    console.log("dispatch后---new state:", store.getState());
+  }
+  // store.dispatch = dispatchAndLogging;
+
+  return dispatchAndLogging;
+}
+```
+
+
+
+#### 用Monkey Patching实现redux-thunk
+
+redux-thunk的作用：
+
+- redux中利用一个中间件redux-thunk可以让dispatch不再只是处理对象，并且可以处理函数；
+
+我们对dispatch进行转换，这个dispatch会判断传入的
+
+```js
+function patchThunk(store) {
+  const next = store.dispatch;
+
+  function dispatchAndThunk(action) {
+    if (typeof action === "function") {
+      action(store.dispatch, store.getState)
+    } else {
+      next(action);
+    }
+  }
+
+  // store.dispatch = dispatchAndThunk;
+  return dispatchAndThunk;
+}
+```
+
+#### 合并中间件
+
+单个调用某个函数来合并中间件并不是特别的方便，我们可以封装一个函数来实现所有的中间件合并：
+
+```js
+function applyMiddlewares(...middlewares) {
+  // const newMiddleware = [...middlewares];
+  middlewares.forEach(middleware => {
+    store.dispatch = middleware(store);
+  })
+}
+
+applyMiddlewares(patchLogging, patchThunk);
+```
+
+代码的流程：
+
+![](https://p.ipic.vip/ujnt3h.jpg)
+
+### reducer拆分
+
+可以按如下的目录结构 按模块拆分redux
+
+![](https://p.ipic.vip/ibfxjm.jpg)
