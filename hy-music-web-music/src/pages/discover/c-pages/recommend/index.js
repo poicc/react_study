@@ -6,7 +6,8 @@ import { getTopBannerAction } from "./store/actionCreators";
 function HYRecommend() {
   const { topBanners } = useSelector(
     (state) => ({
-      topBanners: state.recommend.topBanners,
+      // topBanners: state.get('recommend').get('topBanners'),
+      topBanners: state.getIn(['recommend','topBanners']),
     }),
     shallowEqual
   );
