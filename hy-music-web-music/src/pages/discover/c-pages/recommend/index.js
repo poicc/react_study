@@ -1,19 +1,29 @@
 import React, { memo } from "react";
 
-import { 
+import {
   RecommendWrapper,
   Content,
   RecommendLeft,
-  RecommendRight
-} from './style';
+  RecommendRight,
+} from "./style";
 
-import HYTopBanner from './c-cpns/top-banner';
-
+import HYTopBanner from "./c-cpns/top-banner";
+import HYHotRecommend from "./c-cpns/hot-recommend";
+import HYNewAlbum from "./c-cpns/new-album";
+import HYRecommendRanking from "./c-cpns/recommend-ranking";
 
 function HYRecommend() {
   return (
     <RecommendWrapper>
-      <HYTopBanner/>
+      <HYTopBanner />
+      <Content className="wrap-v2">
+        <RecommendLeft>
+          <HYHotRecommend />
+          <HYNewAlbum />
+          <HYRecommendRanking />
+        </RecommendLeft>
+        <RecommendRight></RecommendRight>
+      </Content>
     </RecommendWrapper>
   );
 }

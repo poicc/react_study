@@ -6,7 +6,7 @@ import { getTopBannerAction } from "../../store/actionCreators";
 import { Carousel } from "antd";
 import { BannerWrapper, BannerLeft, BannerRight, BannerControl } from "./style";
 
-export default memo(function TopBanner() {
+export default memo(function HYTopBanner() {
   // state
   const [currentIndex, setCurrentIndex] = useState(0);
 
