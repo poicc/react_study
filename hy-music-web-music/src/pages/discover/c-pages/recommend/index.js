@@ -1,26 +1,20 @@
-import React, { memo, useEffect } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import React, { memo } from "react";
 
-import { getTopBannerAction } from "./store/actionCreators";
+import { 
+  RecommendWrapper,
+  Content,
+  RecommendLeft,
+  RecommendRight
+} from './style';
+
+import HYTopBanner from './c-cpns/top-banner';
+
 
 function HYRecommend() {
-  const { topBanners } = useSelector(
-    (state) => ({
-      // topBanners: state.get('recommend').get('topBanners'),
-      topBanners: state.getIn(['recommend','topBanners']),
-    }),
-    shallowEqual
-  );
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(getTopBannerAction());
-  }, [dispatch]);
-
   return (
-    <div>
-      <h2>HYRecommend: {topBanners.length}</h2>
-    </div>
+    <RecommendWrapper>
+      <HYTopBanner/>
+    </RecommendWrapper>
   );
 }
 
