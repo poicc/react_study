@@ -1,5 +1,6 @@
 import { getSongDetail, getLyric } from "@/services/player";
 import { parseLyric } from '@/utils/parse-lyric';
+import { getRandomNumber } from '@/utils/math-utils';
 
 import * as actionTypes from "./constants";
 
@@ -32,6 +33,35 @@ export const changeCurrentLyricIndexAction = (index) => ({
   type: actionTypes.CHANGE_CURRENT_LYRIC_INDEX,
   index,
 });
+
+export const changeCurrentIndexAndSongAction = (tag) => {
+  return (dispatch, getState) => {
+    const playList = getState().getIn(["player", "playList"]);
+    const sequence = getState().getIn(["player", "sequence"]);
+    let currentSongIndex = getState().getIn(["player", "currentSongIndex"]);
+
+    switch (sequence) {
+      case 1: // 随机播放
+        let randomIndex = getRandomNumber(playList.length);
+        while (randomIndex === currentSongIndex) {
+          randomIndex = getRandomNumber(playList.length);
+        }
+        currentSongIndex = randomIndex;
+        break;
+      default: // 顺序播放
+        currentSongIndex += tag;
+        if (currentSongIndex >= playList.length) currentSongIndex = 0;
+        if (currentSongIndex < 0) currentSongIndex = playList.length - 1;
+    }
+
+    const currentSong = playList[currentSongIndex];
+    dispatch(changeCurrentSongAction(currentSong));
+    dispatch(changeCurrentSongIndexAction(currentSongIndex));
+
+    // 请求歌词
+    dispatch(getLyricAction(currentSong.id));
+  }
+}
 
 export const getSongDetailAction = (ids) => {
   return (dispatch, getState) => {

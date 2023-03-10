@@ -5,6 +5,7 @@ import { getSizeImage, formatDate, getPlaySong } from "@/utils/format-utils";
 import {
   getSongDetailAction,
   changeSequenceAction,
+  changeCurrentIndexAndSongAction
 } from "../store/actionCreators";
 
 import { NavLink } from "react-router-dom";
@@ -74,7 +75,18 @@ export default memo(function HYAppPlayerBar() {
     dispatch(changeSequenceAction(currentSequence));
   };
 
-  const handleMusicEnded = () => {};
+  const changeMusic = (tag) => {
+    dispatch(changeCurrentIndexAndSongAction(tag));
+  }
+
+  const handleMusicEnded = () => {
+    if (sequence === 2) { // 单曲循环
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
+    } else {
+      dispatch(changeCurrentIndexAndSongAction(1));
+    }
+  };
 
   const sliderChange = useCallback(
     (value) => {
@@ -104,12 +116,18 @@ export default memo(function HYAppPlayerBar() {
     <PlaybarWrapper className="sprite_player">
       <div className="content wrap-v2">
         <Control isPlaying={isPlaying}>
-          <button className="sprite_player prev"></button>
+          <button
+            className="sprite_player prev"
+            onClick={(e) => changeMusic(-1)}
+          ></button>
           <button
             className="sprite_player play"
             onClick={(e) => playMusic()}
           ></button>
-          <button className="sprite_player next"></button>
+          <button
+            className="sprite_player next"
+            onClick={(e) => changeMusic(1)}
+          ></button>
         </Control>
         <PlayInfo>
           <div className="image">
