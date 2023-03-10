@@ -1,34 +1,41 @@
-import React, { memo } from "react";
+import React, { memo } from 'react';
 
-import {
+import HYTopBanner from './c-cpns/top-banner';
+import HYHotRecommend from './c-cpns/hot-recommend';
+import HYNewAlbum from './c-cpns/new-album';
+import HYRecommendRanking from './c-cpns/recommend-ranking';
+import HYUserLogin from './c-cpns/user-login';
+import HYSettleSinger from './c-cpns/settle-singer';
+import HYHotAnchor from './c-cpns/hot-anchor';
+import { 
   RecommendWrapper,
   Content,
   RecommendLeft,
-  RecommendRight,
-} from "./style";
+  RecommendRight
+} from './style';
 
-import HYTopBanner from "./c-cpns/top-banner";
-import HYHotRecommend from "./c-cpns/hot-recommend";
-import HYNewAlbum from "./c-cpns/new-album";
-import HYRecommendRanking from "./c-cpns/recommend-ranking";
-
-function HYRecommend() {
+function HYRecommend(props) {
   return (
     <RecommendWrapper>
-      <HYTopBanner />
+      <HYTopBanner/>
       <Content className="wrap-v2">
         <RecommendLeft>
-          <HYHotRecommend />
-          <HYNewAlbum />
-          <HYRecommendRanking />
+          <HYHotRecommend/>
+          <HYNewAlbum/>
+          <HYRecommendRanking/>
         </RecommendLeft>
-        <RecommendRight></RecommendRight>
+        <RecommendRight>
+          <HYUserLogin/>
+          <HYSettleSinger/>
+          <HYHotAnchor/>
+        </RecommendRight>
       </Content>
     </RecommendWrapper>
-  );
+  )
 }
 
 export default memo(HYRecommend);
+
 
 // function HYRecommend(props) {
 //   const { getBanners, topBanners } = props;
