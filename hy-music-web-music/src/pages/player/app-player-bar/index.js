@@ -90,7 +90,7 @@ export default memo(function HYAppPlayerBar() {
   return (
     <PlaybarWrapper className="sprite_player">
       <div className="content wrap-v2">
-        <Control>
+        <Control isPlaying={isPlaying}>
           <button className="sprite_player prev"></button>
           <button
             className="sprite_player play"
