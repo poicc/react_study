@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 
-import { getCount, getSizeImage } from "@/utils/format-utils";
+import { getCount } from "@/utils/format-utils";
 
 import { SongsCoverWrapper } from "./style";
 

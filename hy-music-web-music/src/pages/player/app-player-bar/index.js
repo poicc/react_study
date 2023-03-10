@@ -2,10 +2,14 @@ import React, { memo, useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 
 import { getSizeImage, formatDate, getPlaySong } from "@/utils/format-utils";
+import {
+  getSongDetailAction,
+  changeSequenceAction,
+} from "../store/actionCreators";
 
-import { PlaybarWrapper, Control, PlayInfo, Operator } from "./style";
+import { NavLink } from "react-router-dom";
 import { Slider } from "antd";
-import { getSongDetailAction } from "../store/actionCreators";
+import { PlaybarWrapper, Control, PlayInfo, Operator } from "./style";
 
 export default memo(function HYAppPlayerBar() {
   const [currentTime, setCurrentTime] = useState(0);
@@ -13,9 +17,10 @@ export default memo(function HYAppPlayerBar() {
   const [isChanging, setIsChanging] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const { currentSong } = useSelector(
+  const { currentSong, sequence } = useSelector(
     (state) => ({
       currentSong: state.getIn(["player", "currentSong"]),
+      sequence: state.getIn(["player", "sequence"]),
     }),
     shallowEqual
   );
@@ -30,14 +35,14 @@ export default memo(function HYAppPlayerBar() {
 
   useEffect(() => {
     audioRef.current.src = getPlaySong(currentSong.id);
-    audioRef.current
-      .play()
-      .then((res) => {
-        setIsPlaying(true);
-      })
-      .catch((err) => {
-        setIsPlaying(false);
-      });
+    // audioRef.current
+    //   .play()
+    //   .then((res) => {
+    //     setIsPlaying(true);
+    //   })
+    //   .catch((err) => {
+    //     setIsPlaying(false);
+    //   });
   }, [currentSong]);
 
   // other handle
@@ -59,6 +64,14 @@ export default memo(function HYAppPlayerBar() {
       setCurrentTime(currentTime * 1000);
       setProgress(((currentTime * 1000) / duration) * 100);
     }
+  };
+
+  const changeSequence = () => {
+    let currentSequence = sequence + 1;
+    if (currentSequence > 2) {
+      currentSequence = 0;
+    }
+    dispatch(changeSequenceAction(currentSequence));
   };
 
   const handleMusicEnded = () => {};
@@ -100,9 +113,9 @@ export default memo(function HYAppPlayerBar() {
         </Control>
         <PlayInfo>
           <div className="image">
-            <a href="/#">
+            <NavLink to="/discover/player">
               <img src={getSizeImage(picUrl, 35)} />
-            </a>
+            </NavLink>
           </div>
           <div className="info">
             <div className="song">
@@ -126,14 +139,17 @@ export default memo(function HYAppPlayerBar() {
             </div>
           </div>
         </PlayInfo>
-        <Operator>
+        <Operator sequence={sequence}>
           <div className="left">
             <button className="sprite_player btn favor"></button>
             <button className="sprite_player btn share"></button>
           </div>
           <div className="right sprite_player">
             <button className="sprite_player btn volume"></button>
-            <button className="sprite_player btn loop"></button>
+            <button
+              className="sprite_player btn loop"
+              onClick={(e) => changeSequence()}
+            ></button>
             <button className="sprite_player btn playlist"></button>
           </div>
         </Operator>
