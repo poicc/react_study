@@ -2295,3 +2295,798 @@ applyMiddlewares(patchLogging, patchThunk);
 可以按如下的目录结构 按模块拆分redux
 
 ![](https://p.ipic.vip/ibfxjm.jpg)
+
+#### combineReducers函数
+
+目前合并的方式是通过每次调用reducer函数自己来返回一个新的对象。 
+
+redux提供了一个combineReducers函数可以方便的让我们对多个reducer进行合并： 
+
+- 它也是将传入的reducers合并到一个对象中，最终返回一个combination的函数（相当于我们之前的reducer函数了）；
+- 在执行combination函数的过程中，它会通过判断前后返回的数据是否相同来决定返回之前的state还是新的state； 
+- 新的state会触发订阅者发生对应的刷新，而旧的state可以有效的组织订阅者发生刷新； 
+
+```javascript
+const reducer  = combineReducers({
+  counterInfo: counterReducer,
+  homeInfo: homeReducer
+})
+
+export default reducer;
+```
+
+## 路由
+
+### 前端路由的原理
+
+前端路由是如何做到URL和内容进行映射呢？监听URL的改变。 
+
+URL发生变化，同时不引起页面的刷新有两个办法： 
+
+- 通过URL的hash改变URL； 
+- 通过HTML5中的history模式修改URL； 
+
+当监听到URL发生变化时，可以通过自己判断当前的URL，决定到底渲染什么样的内容。
+
+#### URL的hash
+
+URL的hash也就是锚点(#), 本质上是改变window.location的href属性； 
+
+可以通过直接赋值location.hash来改变href, 但是页面不发生刷新；
+
+![](https://p.ipic.vip/mcoy4w.jpg)
+
+注意： 
+
+- hash的优势就是兼容性更好，在老版 IE中都可以运行；
+- 但是缺陷是有一个#，显得不像一个真实的路径；
+
+#### HTML5的history
+
+history接口是HTML5新增的, 它有l六种模式改变URL而不刷新页面：
+
+- replaceState：替换原来的路径；
+- pushState：使用新的路径；
+- popState：路径的回退； 
+- go：向前或向后改变路径；
+- forward：向前改变路径；
+- back：向后改变路径；
+
+![](https://p.ipic.vip/fid0fr.png)
+
+### react-router
+
+目前前端流行的三大框架, 都有自己的路由实现: 
+
+- Angular的ngRouter
+- React的react-router
+- Vue的vue-router
+
+React Router的版本4开始，路由不再集中在一个包中进行管理了：
+
+- react-router是router的核心部分代码； 
+- react-router-dom是用于浏览器的；
+- react-router-native是用于原生应用的；
+
+安装react-router： 
+
+安装react-router-dom会自动帮助安装react-router的依赖；```yarn add react-router-dom```
+
+#### react-router基本使用
+
+react-router最主要的API是给我们提供的一些组件：
+
+BrowserRouter或HashRouter
+
+- Router中包含了对路径改变的监听，并且会将相应的路径传递给子组件；
+- BrowserRouter使用history模式；
+- HashRouter使用hash模式；
+
+Link和NavLink： 
+
+- 通常路径的跳转是使用Link组件，最终会被渲染成a元素； 
+- NavLink是在Link基础之上增加了一些样式属性；
+- to属性：Link中最重要的属性，用于设置跳转到的路径；
+
+Route： 
+
+- Route用于路径的匹配； 
+- path属性：用于设置匹配到的路径；
+- component属性：设置匹配到路径后，渲染的组件；
+- exact：精准匹配，只有精准匹配到完全一致的路径，才会渲染对应的组件；
+
+```js
+import React, { PureComponent } from "react";
+
+import { BrowserRouter, Link, Route, withRouter } from "react-router-dom";
+
+import "./App.css";
+
+import Home from './pages/home'
+import About from './pages/about'
+import Profile from './pages/profile'
+
+
+class App extends PureComponent {
+  constructor(props) {
+    super(props);
+  }
+
+  render() {
+    return (
+      <div>
+        <Link to="/">首页</Link>
+        <Link to="/about">关于</Link>
+        <Link to="/profile">我的</Link>
+
+        <Route exact path="/" component={Home} />
+        <Route path="/about" component={About} />
+        <Route path="/profile" component={Profile} />
+
+      </div>
+    );
+  }
+}
+
+export default withRouter(App);
+
+```
+
+#### NavLink的使用
+
+需求：**路径选中时，对应的a元素变为红色**
+
+这个时候，要使用NavLink组件来替代Link组件：
+
+- activeStyle：活跃时（匹配时）的样式；
+- activeClassName：活跃时添加的class； 
+- exact：是否精准匹配； 
+
+但是，在选中about或profile时，第一个也会变成红色： 
+
+- 原因是/路径也匹配到了/about或/profile； 
+- 这个时候，可以在第一个NavLink中添加上exact属性； 
+
+默认的activeClassName： 
+
+- 在默认匹配成功时，NavLink就会添加上一个动态的active class； 
+- 所以也可以直接编写样式
+
+```js
+<NavLink exact to="/" activeClassName="link-active">首页</NavLink>
+        <NavLink to="/about" activeClassName="link-active">关于</NavLink>
+        <NavLink to="/profile" activeClassName="link-active">我的</NavLink>
+```
+
+#### Switch的作用
+
+- 当匹配到某一个路径时，会发现有一些问题；
+- 比如/about路径匹配到的同时，/:userid也被匹配到了，并且最后的一个NoMatch组件总是被匹配到；
+
+原因是什么呢？默认情况下，react-router中只要是路径被匹配到的Route对应的组件都会被渲染；
+
+使用了Switch 只要匹配到了第一个，那么后面的就不应该继续匹配了 需要将所有的Route进行包裹
+
+![](https://p.ipic.vip/nc5bw7.jpg)
+
+#### Redirect
+
+Redirect用于路由的重定向，当这个组件出现时，就会执行跳转到对应的to路径中：
+
+```javascript
+return this.state.isLogin ? (
+      <div>
+        <h2>User</h2>
+        <h2>用户名: coderwhy</h2>
+      </div>
+    ): <Redirect to="/login"/>
+```
+
+#### 手动路由跳转
+
+如何可以获取到history的对象呢？两种方式 
+
+- 方式一：如果该组件是通过路由直接跳转过来的，那么可以直接获取history、location、match对象； 
+- 方式二：如果该组件是一个普通渲染的组件，那么不可以直接获取history、location、match对象； 
+
+如果希望在App组件中获取到history对象，必须满足一下两个条件：
+
+- App组件必须包裹在Router组件之内； 
+- App组件使用withRouter高阶组件包裹； 
+
+注意：使用withRouter必须被BrowserRouter或HashRouter包裹 所以根组件（App）要想使用 就得在index.js当中最外层就用BrowserRouter或HashRouter包裹
+
+#### 参数传递
+
+**传递参数有三种方式：**
+
+- 动态路由的方式；
+- search传递参数；
+- Link中to传入对象； 
+
+**动态路由的概念指的是路由中的路径并不会固定：**
+
+- 比如/detail的path对应一个组件Detail； 
+- 如果将path在Route匹配时写成/detail/:id，那么 /detail/abc、/detail/123都可以匹配到该Route，并且进行显示； 这个匹配规则，就称之为动态路由；
+- 通常情况下，使用动态路由可以为路由传递参数。 
+
+**search传递参数**
+
+```js
+<NavLink to={`/detail2?name=why&age=18`} activeClassName="link-active">详情2</NavLink>
+```
+
+**Link中to可以直接传入一个对象(推荐)**
+
+```js
+        <NavLink to={{
+                  pathname: "/detail3",
+                  search: "name=abc",
+                  state: info
+                 }} 
+                activeClassName="link-active">
+          详情3
+        </NavLink>
+```
+
+#### react-router-config
+
+将所有的路由配置放到一个地方进行集中管理：可以使用react-router-config来完成； 
+
+安装react-router-config```yarn add react-router-config```
+
+- 配置路由映射的关系数组 
+
+```js
+import Home from '../pages/home';
+import About, { AboutHisotry, AboutCulture, AboutContact, AboutJoin } from '../pages/about';
+import Profile from '../pages/profile';
+import User from '../pages/user';
+
+const routes = [
+  {
+    path: "/",
+    exact: true,
+    component: Home
+  },
+  {
+    path: "/about",
+    component: About,
+    routes: [
+      {
+        path: "/about",
+        exact: true,
+        component: AboutHisotry
+      },
+      {
+        path: "/about/culture",
+        component: AboutCulture
+      },
+      {
+        path: "/about/contact",
+        component: AboutContact
+      },
+      {
+        path: "/about/join",
+        component: AboutJoin
+      },
+    ]
+  }
+]
+
+export default routes;
+```
+
+- 使用renderRoutes函数完成配置
+
+```javascript
+import { renderRoutes } from 'react-router-config';
+
+{renderRoutes(routes)}
+```
+
+- 还提供了一个matchRoutes方法 可以拿到匹配到的route和match信息 第一个参数为匹配的数组 第二个参数为匹配的路径
+
+![](https://p.ipic.vip/c9bxlt.png)
+
+## hooks
+
+### 为什么需要Hook
+
+**Hook** 是 React 16.8 的新增特性，它可以在不编写class的情况下使用state以及其他的React特性（比如生命周期）。
+
+class组件相对于函数式组件有什么优势？比较常见的是下面的优势：
+
+- class组件可以定义自己的state，用来保存组件自己内部的状态；函数式组件不可以，因为函数每次调用都会产生新的临时变量；
+
+- class组件有自己的生命周期，可以在对应的生命周期中完成自己的逻辑；
+
+  - 比如在componentDidMount中发送网络请求，并且该生命周期函数只会执行一次；
+
+  - 函数式组件在学习hooks之前，如果在函数中发送网络请求，意味着每次重新渲染都会重新发送一次网络请求；
+
+- class组件可以在状态改变时只会重新执行render函数以及我们希望重新调用的生命周期函数componentDidUpdate等；
+- 函数式组件在重新渲染时，整个函数都会被执行，似乎没有什么地方可以只让它们调用一次；
+
+所以，在Hook出现之前，对于上面这些情况通常都会编写class组件。
+
+#### class组件存在的问题
+
+**复杂组件变得难以理解：**
+
+- 我们在最初编写一个class组件时，往往逻辑比较简单，并不会非常复杂。但是随着业务的增多，我们的class组件会变得越来越复杂；
+- 比如componentDidMount中，可能就会包含大量的逻辑代码：包括网络请求、一些事件的监听（还需要在componentWillUnmount中移除）；
+- 而对于这样的class实际上非常难以拆分：因为它们的逻辑往往混在一起，强行拆分反而会造成过度设计，增加代码的复杂度；
+
+**难以理解的class：** 
+
+- 很多人发现学习ES6的class是学习React的一个障碍。
+- 比如在class中，我们必须搞清楚this的指向到底是谁，所以需要花很多的精力去学习this； 
+- 虽然前端开发人员必须掌握this，但是依然处理起来非常麻烦；
+
+**组件复用状态很难**： 
+
+- 在前面为了一些状态的复用我们需要通过高阶组件或render props； 
+- 像我们之前学习的redux中connect或者react-router中的withRouter，这些高阶组件设计的目的就是为了状态的复用；
+- 或者类似于Provider、Consumer来共享一些状态，但是多次使用Consumer时，我们的代码就会存在很多嵌套；
+- 这些代码让我们不管是编写和设计上来说，都变得非常困难；
+
+#### Hook的出现
+
+Hook的出现，可以解决上面提到的这些问题；
+
+**它可以让我们在不编写class的情况下使用state以及其他的React特性**； 
+
+Hook的使用场景：
+
+- Hook的出现基本可以代替我们之前所有使用class组件的地方（除了一些非常不常用的场景）；
+- 但是如果是一个旧的项目，你并不需要直接将所有的代码重构为Hooks，因为它完全向下兼容，你可以渐进式的来使用它；
+- Hook只能在函数组件中使用，不能在类组件，或者函数组件之外的地方使用；
+
+### hook使用 
+
+Hook指的类似于useState、useEffect这样的函数
+
+Hooks是对这类函数的统称；
+
+**计数器案例对比**
+
+可以看到使用hooks之后代码变得非常简洁
+
+![](https://p.ipic.vip/wbw0gs.png)
+
+#### useState
+
+useState来自react，需要从react中导入，它是一个hook； 
+
+参数：初始化值，如果不设置为undefined； 
+
+返回值：数组，包含两个元素； 
+
+- 元素一：当前状态的值（第一调用为初始化值）；
+- 元素二：设置状态值的函数；
+
+点击button按钮后，会完成两件事情：
+
+- 调用setCount，设置一个新的值； 
+- 组件重新渲染，并且根据新的值返回DOM结构；
+
+
+
+Hook 就是 JavaScript 函数，这个函数可以帮助你 钩入（hook into） React State以及生命周期等特性；
+
+但是使用它们会有两个额外的规则： 
+
+- 只能在**函数最外层**调用 Hook。不要在循环、条件判断或者子函数中调用。
+- 只能在 **React 的函数组件**中调用 Hook。不要在其他 JavaScript 函数中调用。
+
+##### 认识useState
+
+State Hook的API就是 useState
+
+**useState**会帮助我们定义一个 state变量，useState 是一种新方法，它与 class 里面的 this.state 提供的功能完全相同。一般来说，在函数退出后变量就会”消失”，而 state 中的变量会被 React 保留。 
+
+**useState**接受唯一一个参数，在第一次组件被调用时使用来作为初始化值。（如果没有传递参数，那么初始化值为undefined）。
+
+**useState**是一个数组，我们可以通过数组的解构，来完成赋值会非常方便。 
+
+数组的解构学习： https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
+
+**为什么叫 useState 而不叫 createState?** 
+
+- “Create” 可能不是很准确，因为 state 只在组件首次渲染的时候被创建。 
+- 在下一次重新渲染时，useState 返回给我们当前的 state。 
+- 如果每次都创建新的变量，它就不是 “state”了。
+- 这也是 Hook 的名字*总是*以 use 开头的一个原因。
+
+#### Effect Hook
+
+Effect Hook 可以完成一些类似于class中生命周期的功能；
+
+- 事实上，类似于网络请求、手动更新DOM、一些事件的监听，都是React更新DOM的一些副作用（Side Effects）；
+- 所以对于完成这些功能的Hook被称之为 Effect Hook； 
+
+**useEffect的解析：**
+
+- 通过useEffect的Hook，可以告诉React需要在渲染后执行某些操作； 
+- useEffect要求我们传入一个回调函数，在React执行完更新DOM操作之后，就会回调这个函数；
+- 默认情况下，无论是第一次渲染之后，还是每次更新之后，都会执行这个 回调函数；
+
+```js
+import React, { useEffect, useState } from 'react'
+
+export default function EffectHookCancelDemo() {
+
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    console.log("订阅一些事件");
+
+    return () => {
+      console.log("取消订阅事件")
+    }
+  }, []);
+
+  return (
+    <div>
+      <h2>EffectHookCancelDemo</h2>
+      <h2>{count}</h2>
+      <button onClick={e => setCount(count + 1)}>+1</button>
+    </div>
+  )
+}
+
+```
+
+##### 需要清除Effect
+
+在class组件的编写过程中，某些副作用的代码，我们需要在componentWillUnmount中进行清除：
+
+- 比如我们之前的事件总线或Redux中手动调用subscribe； 
+- 都需要在componentWillUnmount有对应的取消订阅； 
+
+Effect Hook通过什么方式来模拟componentWillUnmount呢？ 
+
+- useEffect传入的回调函数A本身可以有一个返回值，这个返回值是另外一个回调函数B：
+- type EffectCallback = () => (void | (() => void | undefined));
+
+**为什么要在 effect 中返回一个函数？**
+
+这是 effect 可选的清除机制。每个 effect 都可以返回一个清除函数；如此可以将添加和移除订阅的逻辑放在一起； 它们都属于 effect 的一部分； 
+
+**React 何时清除 effect？** 
+
+React 会在组件更新和卸载的时候执行清除操作； 
+
+正如之前学到的，effect 在每次渲染的时候都会执行；
+
+##### 使用多个Effect
+
+使用Hook的其中一个目的就是解决class中生命周期经常将很多的逻辑放在一起的问题：
+
+- 比如网络请求、事件监听、手动修改DOM，这些往往都会放在componentDidMount中；
+- 使用Effect Hook，我们可以将它们分离到不同的useEffect中：
+
+**Hook 允许我们按照代码的用途分离它们，** 而不是像生命周期函数那样： 
+
+React 将按照 effect 声明的顺序依次调用组件中的*每一个* effect；
+
+```javascript
+  useEffect(() => {
+    console.log("修改DOM", count);
+  }, [count]);
+
+  useEffect(() => {
+    console.log("订阅事件");
+  }, []);
+
+  useEffect(() => {
+    console.log("网络请求");
+  }, []);
+```
+
+##### Effect性能优化
+
+默认情况下，useEffect的回调函数会在每次渲染时都重新执行，但是这会导致两个问题：
+
+某些代码我们只是希望执行一次即可，类似于componentDidMount和componentWillUnmount中完成的事情；（比如网络请求、订阅和取消订阅）；
+
+另外，多次执行也会导致一定的性能问题；
+
+我们如何决定useEffect在什么时候应该执行和什么时候不应该执行呢？ 
+
+useEffect实际上有两个参数：
+
+- 参数一：执行的回调函数；
+- 参数二：该useEffect在哪些state发生变化时，才重新执行；（受谁的影响） 
+
+ 如果一个函数我们不希望依赖任何的内容时，也可以传入一个空的数组 []： 
+
+#### useContext
+
+要在组件中使用共享的Context有两种方式：
+
+- 类组件可以通过 类名.contextType = MyContext方式，在类中获取context； 
+- 多个Context或者在函数式组件中通过 MyContext.Consumer 方式共享context； 
+
+但是多个Context共享时的方式会存在大量的嵌套： 
+
+- Context Hook允许我们通过Hook来直接获取某个Context的值； 
+
+注意事项：
+
+- 当组件上层最近的 <MyContext.Provider> 更新时，该 Hook 会触发重新渲染，并使用最新传递给 MyContext provider 的 context value 值。
+
+
+
+#### useReducer
+
+useReducer是useState的一种替代方案：
+
+- 在某些场景下，如果state的处理逻辑比较复杂，我们可以通过useReducer来对其进行拆分； 
+- 或者这次修改的state需要依赖之前的state时，也可以使用；
+
+![](https://p.ipic.vip/zaetgq.png)
+
+数据是不会共享的，它们只是使用了相同的counterReducer的函数而已。 
+
+**所以，useReducer只是useState的一种替代品，并不能替代Redux。**
+
+#### useCallback
+
+useCallback实际的目的是为了进行性能的优化。 
+
+如何进行性能的优化呢？ 
+
+- useCallback会返回一个函数的 memoized（记忆的） 值； 
+- 在依赖不变的情况下，多次定义的时候，返回的值是相同的；
+
+通常使用useCallback的目的是不希望子组件进行多次渲染，并不是为了函数进行缓存；
+
+```js
+import React, {useState, useCallback, memo} from 'react';
+
+/**
+ * useCallback在什么时候使用?
+ * 场景: 在将一个组件中的函数, 传递给子元素进行回调使用时, 使用useCallback对函数进行处理.
+ */
+const HYButton = memo((props) => {
+  console.log("HYButton重新渲染: " + props.title);
+  return <button onClick={props.increment}>HYButton +1</button>
+});
+
+export default function CallbackHookDemo02() {
+  console.log("CallbackHookDemo02重新渲染");
+
+  const [count, setCount] = useState(0);
+  const [show, setShow] = useState(true);
+
+  const increment1 = () => {
+    console.log("执行increment1函数");
+    setCount(count + 1);
+  }
+
+  const increment2 = useCallback(() => {
+    console.log("执行increment2函数");
+    setCount(count + 1);
+  }, [count]);
+
+  return (
+    <div>
+      <h2>CallbackHookDemo01: {count}</h2>
+      {/* <button onClick={increment1}>+1</button>
+      <button onClick={increment2}>+1</button> */}
+      <HYButton title="btn1" increment={increment1}/>
+      <HYButton title="btn2" increment={increment2}/>
+
+      <button onClick={e => setShow(!show)}>show切换</button>
+    </div>
+  )
+}
+
+```
+
+#### useMemo
+
+useMemo实际的目的也是为了进行性能的优化。 
+
+如何进行性能的优化呢？ 
+
+- useMemo返回的也是一个 memoized（记忆的） 值； 
+- 在依赖不变的情况下，多次定义的时候，返回的值是相同的；
+
+useMemo返回的实际值就是其return的值
+
+```javascript
+function calcNumber(count) {
+  console.log("calcNumber重新计算");
+  let total = 0;
+  for (let i = 1; i <= count; i++) {
+    total += i;
+  }
+  return total;
+}
+
+  // const total = calcNumber(count);
+  const total = useMemo(() => {
+    return calcNumber(count);
+  }, [count]);
+
+```
+
+#####  useCallback和useMemo的区别
+
+useMemo可以转换为useCallback return一个函数即可
+
+```js
+  const increment2 = useCallback(() => {
+    console.log("执行increment2函数");
+    setCount(count + 1);
+  }, [count]);
+
+  const increment3 = useMemo(() => {
+    return () => {
+      console.log("执行increment2函数");
+      setCount(count + 1);
+    }
+  }, [count]);
+```
+
+#### useRef
+
+useRef返回一个ref对象，返回的ref对象再组件的整个生命周期保持不变。
+
+最常用的ref是两种用法：
+
+用法一：引入DOM（或者组件，但是需要是class组件）元素； 
+
+```javascript
+onst titleRef = useRef();
+
+  function changeDOM() {
+    titleRef.current.innerHTML = "Hello World";
+  }
+
+ <input ref={inputRef} type="text"/>
+```
+
+
+
+用法二：保存一个数据，这个对象在整个生命周期中可以保存不变；
+
+```javascript
+ const [count, setCount] = useState(0);
+
+  const numRef = useRef(count);
+
+  useEffect(() => {
+    numRef.current = count;
+  }, [count])
+
+  return (
+    <div>
+      <h2>count上一次的值: {numRef.current}</h2>
+      <h2>count这一次的值: {count}</h2>
+      <button onClick={e => setCount(count + 10)}>+10</button>
+    </div>
+  )
+```
+
+#### useImperativeHandle
+
+通过forwardRef可以将ref转发到子组件
+
+forwardRef的做法本身没有什么问题，但是我们是将子组件的DOM直接暴露给了父组件：
+
+- 直接暴露给父组件带来的问题是某些情况的不可控； 
+- 父组件可以拿到DOM后进行任意的操作； 
+- 但是，事实上在上面的案例中，我们只是希望父组件可以操作的focus，其他并不希望它随意操作； 
+
+**通过useImperativeHandle可以使暴露固定的操作：** 
+
+- 通过useImperativeHandle的Hook，将传入的ref和useImperativeHandle第二个参数返回的对象绑定到了一起； 
+- 所以在父组件中，使用 inputRef.current时，实际上使用的是返回的对象； 
+- 比如我调用了 focus函数，甚至可以调用 printHello函数
+
+```javascript
+import React, { useRef, forwardRef, useImperativeHandle } from 'react';
+
+const HYInput = forwardRef((props, ref) => {
+  const inputRef = useRef();
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      inputRef.current.focus();
+    }
+  }), [inputRef])
+
+  return <input ref={inputRef} type="text"/>
+})
+
+export default function UseImperativeHandleHookDemo() {
+  const inputRef = useRef();
+
+  return (
+    <div>
+      <HYInput ref={inputRef}/>
+      <button onClick={e => inputRef.current.focus()}>聚焦</button>
+    </div>
+  )
+}
+```
+
+#### useLayoutEffect
+
+useLayoutEffect看起来和useEffect非常的相似，事实上他们也只有一点区别而已： 
+
+- useEffect会在渲染的内容更新到DOM上后执行，不会阻塞DOM的更新；
+- useLayoutEffect会在渲染的内容更新到DOM上之前执行，会阻塞DOM的更新；
+
+如果希望在某些操作发生之后再更新DOM，那么应该将这个操作放到useLayoutEffect。 
+
+useEffect和useLayoutEffect的对比
+
+![](https://p.ipic.vip/5m4sa1.jpg)
+
+#### 自定义Hook
+
+**自定义Hook本质上只是一种函数代码逻辑的抽取，严格意义上来说，它本身并不算React的特性。** 
+
+本质就是在抽取的函数代码逻辑中使用了其他hook **函数名以use开头就会被react识别的hook函数**
+
+需求：所有的组件在创建和销毁时都进行打印
+
+- 组件被创建：打印 组件被创建了；
+- 组件被销毁：打印 组件被销毁了；
+
+```javascript
+import React, { useEffect } from 'react';
+
+const Home = (props) => {
+  useLoggingLife("Home");
+  return <h2>Home</h2>
+}
+
+const Profile = (props) => {
+  useLoggingLife("Profile");
+  return <h2>Profile</h2>
+}
+
+export default function CustomLifeHookDemo01() {
+  useLoggingLife("CustomLifeHookDemo01");
+  return (
+    <div>
+      <h2>CustomLifeHookDemo01</h2>
+      <Home/>
+      <Profile/>
+    </div>
+  )
+}
+
+function useLoggingLife(name) {
+  useEffect(() => {
+    console.log(`${name}组件被创建出来了`);
+
+    return () => {
+      console.log(`${name}组件被销毁掉了`);
+    }
+  }, []);
+}
+
+```
+
+#### redux hooks
+
+useSelector的作用是将state映射到组件中：
+
+- 参数一：将state映射到需要的数据中；
+- 参数二：可以进行比较来决定是否组件重新渲染；
+
+useSelector默认会比较我们返回的两个对象是否相等；
+
+- 如何比较呢？ const refEquality = (a, b) => a === b； 
+- 也就是我们必须返回两个完全相等的对象才可以不引起重新渲染；
+
+useDispatch非常简单，就是直接获取dispatch函数，之后在组件中直接使用即可；
+
+还可以通过useStore来获取当前的store对象；
